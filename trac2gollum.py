@@ -225,7 +225,9 @@ def read_database(db):
             "username": "Trac2Gollum",
             "useremail": "github.com/hinnerk/Trac2Gollum.git",
             "ip": latest[4],
-            "text": format_text(latest[5]),
+            "text": format_text(latest[5]) + "\n".join(
+                map(lambda x:"* [%s](attachments/%s/%s)" % (x[2] or x[0],formatted_page_name,x[0]),
+                    attachments)),
             "comment": format_comment(latest, final=True),
             "attachments": map(
                 lambda x: {
