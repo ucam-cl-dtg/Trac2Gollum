@@ -222,6 +222,20 @@ def read_database(db):
 
 def main():
     db, target = getargs()
+
+
+    def git_commit(entry):
+        subprocess.check_call([GIT, "commit", "-m", entry["comment"]], cwd=target,
+                              env={"GIT_COMMITTER_DATE": entry["time"],
+                                   "GIT_AUTHOR_DATE": entry["time"],
+                                   "GIT_AUTHOR_NAME": entry["username"],
+                                   "GIT_AUTHOR_EMAIL": entry["useremail"],
+                                   "GIT_COMMITTER_NAME": "Trac2Gollum",
+                                   "GIT_COMMITTER_EMAIL": "http://github.com/hinnerk/Trac2Gollum.git"})
+    def git_add(page):
+        subprocess.check_call([GIT, "add", page], cwd=target)
+
+
     source = read_database(db)
     for entry in source:
         # make paths conform to local filesystem
@@ -230,25 +244,13 @@ def main():
             page = page.encode("utf-8")
         try:
             open(os.path.join(target, page), "wb").write(entry["text"].encode("utf-8"))
-            subprocess.check_call([GIT, "add", page], cwd=target)
+            git_add(page)
             try:
-                subprocess.check_call([GIT, "commit", "-m", entry["comment"]], cwd=target,
-                                      env={"GIT_COMMITTER_DATE": entry["time"],
-                                           "GIT_AUTHOR_DATE": entry["time"],
-                                           "GIT_AUTHOR_NAME": entry["username"],
-                                           "GIT_AUTHOR_EMAIL": entry["useremail"],
-                                           "GIT_COMMITTER_NAME": "Trac2Gollum",
-                                           "GIT_COMMITTER_EMAIL": "http://github.com/hinnerk/Trac2Gollum.git"})
+                git_commit(entry)
             # trying to circumvent strange unicode-encoded file name problems:
             except subprocess.CalledProcessError:
-                [subprocess.check_call([GIT, "add", x], cwd=target) for x in os.listdir(target)]
-                subprocess.check_call([GIT, "commit", "-m", entry["comment"]], cwd=target,
-                                      env={"GIT_COMMITTER_DATE": entry["time"],
-                                           "GIT_AUTHOR_DATE": entry["time"],
-                                           "GIT_AUTHOR_NAME": entry["username"],
-                                           "GIT_AUTHOR_EMAIL": entry["useremail"],
-                                           "GIT_COMMITTER_NAME": "Trac2Gollum",
-                                           "GIT_COMMITTER_EMAIL": "http://github.com/hinnerk/Trac2Gollum.git"})
+                [git_add(x) for x in os.listdir(target)]
+                git_commit(entry)
 
         except Exception, e:
             print "\n\n\nXXX Problem: ", e
