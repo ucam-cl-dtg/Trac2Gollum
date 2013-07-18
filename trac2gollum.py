@@ -6,6 +6,7 @@ from datetime import datetime
 import subprocess
 import re
 import time
+import urllib
 
 GIT = "/opt/local/bin/git"
 
@@ -211,9 +212,11 @@ def read_database(db):
                 "ip": revision[4],
                 "text": revision[5],
                 "comment": format_comment(revision, final=False),
+                "attachments": [],
             }
         latest = db.execute('select name, max(version), time, author, ipnr, text, comment from wiki where name is ?',
                             [page]).fetchall()[0]
+        attachments = db.execute('select filename,time,description,author,ipnr from attachment where id is ?', [page]).fetchall()
         yield {
             "page": formatted_page_name,
             "version": latest[1],
@@ -223,8 +226,18 @@ def read_database(db):
             "ip": latest[4],
             "text": format_text(latest[5]),
             "comment": format_comment(latest, final=True),
+            "attachments": map(
+                lambda x: {
+                    "source": os.path.join(page,urllib.quote(x[0])),
+                    "destination" : "attachments/%s/%s" % (formatted_page_name,x[0]),
+                    "time": format_time(x[1]),
+                    "username": format_user(x)[0],
+                    "useremail": x[4],
+                    "ip": x[4],
+                    "comment": x[2] or "Attachment %s added" % x[0],
+                    },
+                attachments)
         }
-
 
 def main():
     (db, target, attachments_src) = getargs()
