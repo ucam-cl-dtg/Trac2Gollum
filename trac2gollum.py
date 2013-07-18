@@ -47,20 +47,25 @@ def format_comment(entry, final):
 
 def getargs():
     """ get database file to read from and git repository to write to from
-        commandline
+        commandline and find the trac attachments directory
     """
     try:
-        read = sys.argv[1]
-        write = sys.argv[2]
-        print u'Reading "%s", writing "%s".' % (sys.argv[1], sys.argv[2])
-        if os.path.isfile(read) and os.path.isdir(os.path.join(write, ".git")):
-            r = sqlite3.connect(read)
-            return (r, write)
-        else:
-            print u'ERROR: Either file "%s" or git repository "%s" does not exist.' % (read, write)
-            sys.exit(1)
+        (trac_dir,git_dir) = sys.argv[1:3]
+
+        db_file = os.path.join(trac_dir,"db","trac.db")
+        if not os.path.isfile(db_file):
+            raise Exception("Trac db file %s does not exist" % db_file)
+
+        if not os.path.isdir(os.path.join(git_dir,".git")):
+            raise Exception("Destination %s not found or not a git repository" % git_dir)
+
+        trac_attachments = os.path.join(trac_dir,"attachments","wiki")
+        if not os.path.isdir(trac_attachments):
+            raise Exception("Trac attachments directory %s not found" % trac_attachments)
+
+        return (sqlite3.connect(db_file),git_dir,trac_attachments)
     except IndexError:
-        print u'Try: "%s trac.db git-repo' % (sys.argv[0])
+        print u'Try: "%s trac-dir git-repo' % (sys.argv[0])
         sys.exit(1)
 
 
@@ -221,7 +226,7 @@ def read_database(db):
 
 
 def main():
-    db, target = getargs()
+    (db, target, attachments_src) = getargs()
 
 
     def git_commit(entry):
