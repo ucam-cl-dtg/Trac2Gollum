@@ -7,6 +7,7 @@ import subprocess
 import re
 import time
 import urllib
+import shutil
 
 GIT = "/opt/local/bin/git"
 
@@ -239,6 +240,13 @@ def read_database(db):
                 attachments)
         }
 
+def copyfile(src,dest):
+    dest_dir = os.path.dirname(dest)
+    if not os.path.isdir(dest_dir):
+        os.makedirs(dest_dir)
+    shutil.copyfile(src,dest)
+
+
 def main():
     (db, target, attachments_src) = getargs()
 
@@ -264,6 +272,10 @@ def main():
         try:
             open(os.path.join(target, page), "wb").write(entry["text"].encode("utf-8"))
             git_add(page)
+            for attachment in entry["attachments"]:
+                copyfile(os.path.join(attachments_src,attachment["source"]),
+                         os.path.join(target,attachment["destination"]))
+                git_add(attachment["destination"])
             try:
                 git_commit(entry)
             # trying to circumvent strange unicode-encoded file name problems:
