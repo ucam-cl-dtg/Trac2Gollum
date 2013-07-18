@@ -134,9 +134,9 @@ re_strong = re.compile(r"'''(.+)'''")
 re_italic = re.compile(r"''(.+)''")
 re_ul = re.compile(r'(^\s\*)', re.MULTILINE)
 re_ol = re.compile(r'^\s(\d+\.)', re.MULTILINE)
+re_image = re.compile(r'\[\[Image\((.*?)\)\]\]')
 
-
-def format_text(text):
+def format_text(text,attach_path):
     """ converts trac wiki to gollum markdown syntax
 
     >>> format_text(u"= One =\\n== Two ==\\n=== Three ===\\n==== Four ====")
@@ -180,6 +180,7 @@ def format_text(text):
     text = re_italic.sub(r'*\1*', text)
     text = re_ul.sub(r'*', text)
     text = re_ol.sub(r'\1', text)
+    text = re_image.sub(r'[[attachments/%s/\1]]' % attach_path,text)
     return text
 
 
@@ -225,7 +226,7 @@ def read_database(db):
             "username": "Trac2Gollum",
             "useremail": "github.com/hinnerk/Trac2Gollum.git",
             "ip": latest[4],
-            "text": format_text(latest[5]) + "\n".join(
+            "text": format_text(latest[5],formatted_page_name) + "\n".join(
                 map(lambda x:"* [%s](attachments/%s/%s)" % (x[2] or x[0],formatted_page_name,x[0]),
                     attachments)),
             "comment": format_comment(latest, final=True),
