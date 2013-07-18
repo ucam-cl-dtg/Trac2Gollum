@@ -61,9 +61,10 @@ def getargs():
         if not os.path.isdir(os.path.join(git_dir,".git")):
             raise Exception("Destination %s not found or not a git repository" % git_dir)
 
-        trac_attachments = os.path.join(trac_dir,"attachments","wiki")
+        trac_attachments = os.path.join(trac_dir,"attachments")
         if not os.path.isdir(trac_attachments):
             raise Exception("Trac attachments directory %s not found" % trac_attachments)
+        trac_attachments = os.path.join(trac_attachments,"wiki")
 
         return (sqlite3.connect(db_file),git_dir,trac_attachments)
     except IndexError:
