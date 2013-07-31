@@ -1,8 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 import re
 import os
 import cgi
 import sys
+# Evil hack to set default character encoding to UTF-8
+reload(sys)
+sys.setdefaultencoding('UTF-8')
 import cgitb; cgitb.enable()
 
 def convert_code(text):
@@ -109,10 +114,10 @@ def format_text(text):
     text = re_ol.sub(r'\1', text)
     return text
 
-print "Content-type: text/html\n\n"
+print "Content-type: text/html; charset=utf-8\n\n"
 
 form = cgi.FieldStorage()
-text = form.getvalue("input") if "input" in form else ""
+text = unicode(form.getvalue(u"input"), u'utf-8') if u"input" in form else u""
 
 with open('template.htm') as f:
 	template = ""
